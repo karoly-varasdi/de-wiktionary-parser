@@ -1,0 +1,6 @@
+include README.md
+include LIESMICH.md
+include LICENSE
+include docs/help_dictionaries.md
+include docs/help_python_modules.md
+include docs/hilfe_worterbucher.md
