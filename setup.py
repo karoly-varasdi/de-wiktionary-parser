@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name='dewiktionaryparser',
-      version='1.0',
+      version='1.1',
       description='A Python library for parsing data from the German wiktionary',
       long_description=readme(),
       author='Zsofia Gyarmathy and Karoly Varasdi',
@@ -21,6 +21,6 @@ setup(name='dewiktionaryparser',
                     ("dewiktionaryparser_docs/docs", ["docs/help_dictionaries.md", "docs/help_python_modules.md", "docs/hilfe_worterbucher.md"])],
       package_dir = {'': 'src'},
       packages=['dewiktionaryparser'],
-      install_requires=['ujson'],
-      setup_requires=['ujson'],
+      install_requires=['ujson', 'prettytable'],
+      setup_requires=['ujson', 'prettytable'],
       zip_safe=False)

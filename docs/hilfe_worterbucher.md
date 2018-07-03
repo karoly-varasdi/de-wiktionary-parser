@@ -2,29 +2,35 @@
 
 * [Wörterbucharten](#dictionary-types)
 * [Wörterbuchstruktur](#json-structure)
-	* [Grundstruktur eines `GermanNounEntriesDict` Wörterbuchs (enthält grammatikalische Informationen)](#json-GermanNounEntriesDict)
-	* [Grundstruktur eines `GermanNounEntriesTranslationDict` Wörterbuchs (enthält Übersetzungen)](#json-GermanNounEntriesTranslationDict)
+	* [Grundstruktur eines `GermanNounEntriesDict` Wörterbuchs (enthält grammatikalische Informationen über Substantive)](#json-GermanNounEntriesDict)
+	* [Grundstruktur eines `GermanAdjEntriesDict` Wörterbuchs (enthält grammatikalische Informationen über Adjektive)](#json-GermanAdjEntriesDict)
+	* [Grundstruktur eines Übersetzungswörterbuchs (`GermanNounTranslationDict` und `GermanAdjTranslationDict`)](#json-German-TranslationDict)
 * [Hinweise zu den Wörterbuch-Inhalten](#remarks)
 
 
 ## <a name="dictionary-types"></a>Wörterbucharten 
-Wir haben drei Klassen definiert, die drei Wörterbucharten entsprechen: 
-1. `GermanNounEntriesDict`: eine Art Wörterbuch, dessen Einträge grammatikalische (morphologische und verwendungsbezogene) Informationen des deutschen Wiktionary über deutsche Substantive enthalten.
-2. `GermanNounEntriesTranslationDict`: eine Art Wörterbuch, dessen Einträge (vorerst nur englische) Übersetzungen deutscher Substantive enthalten, gegliedert nach Verwendungen und Lexemen.
-3. `WordEntriesDict`: eine Oberklasse der beiden obenen Klassen. 
+Wir haben unterschiedliche Klassen von Wörterbücher definiert, die unterschiedlichen Wörterbucharten entsprechen:
+1. Substantiv-bezogene Wörterbücher:
+    1. `GermanNounEntriesDict`: eine Art Wörterbuch, dessen Einträge grammatikalische (morphologische und verwendungsbezogene) Informationen über deutsche Substantive aus dem deutschen Wiktionary enthalten.
+    2. `GermanNounTranslationDict`: eine Art Wörterbuch, dessen Einträge (vorerst nur englische) Übersetzungen deutscher Substantive enthalten, gegliedert nach Verwendungen und Lexemen.
+    
+2. Adjektiv-bezogene Wörterbücher:
+    1. `GermanAdjEntriesDict`: eine Art Wörterbuch, dessen Einträge grammatikalische Informationen (hauptsächlich über gesteigerte Formen) über deutsche Adjektive aus dem deutschen Wiktionary enthalten.
+    2. `GermanAdjTranslationDict`: eine Art Wörterbuch, dessen Einträge (vorerst nur englische) Übersetzungen deutscher Adjektive enthalten, gegliedert nach Verwendungen und Lexemen.
+    
+3. `WordEntriesDict`: eine Oberklasse der obenen Klassen. 
 
-`GermanNounEntriesDict` und `GermanNounEntriesTranslationDict` Wörterbücher werden von Parser-Skripten generiert, die eine xml-Datei des deutschen Wiktionary parsen. 
-Das Ergebnis der Parsing-Phase kann dann in das weit verbreitete JSON Format (siehe nächsten Abschnitt) exportiert (gespeichert) 
-werden.
+Die Wörterbücher werden von Parser-Skripten mit Informationen aufgeladen, die eine xml-Datei des deutschen Wiktionary parsen. 
+Das Ergebnis der Parsing-Phase kann dann in das weit verbreitete JSON Format exportiert (gespeichert) werden.
 
-Neben der Möglichkeit, Wörterbücher zu generieren und zu speichern, gibt es Methoden und Funktionen, die diese Wörterbücher manipulieren, durchsuchen oder abbilden.      
+Neben der Möglichkeit, Wörterbücher zu generieren und zu speichern, gibt es Methoden und Funktionen, die diese Wörterbücher manipulieren, durchsuchen oder abbilden.  
 
 ## <a name="json-structure"></a>Wörterbuchstruktur 
 
 Im Folgenden wird die Struktur der generierten Einträge beschrieben. Alle illustrativen Beispiele beziehen sich auf die *1 June 2018* Version des deutschen Wiktionary. 
 Es kann also vorkommen, dass sie zu dem Zeitpunkt, an dem Sie diesen Text lesen, mittlerweile geändert wurden.
   
-### <a name="json-GermanNounEntriesDict"></a>Grundstruktur eines `GermanNounEntriesDict` Wörterbuchs (enthält grammatikalische Informationen):
+### <a name="json-GermanNounEntriesDict"></a>Grundstruktur eines `GermanNounEntriesDict` Wörterbuchs (enthält grammatikalische Informationen über Substantive):
 
 ```
 {
@@ -88,7 +94,8 @@ Es kann also vorkommen, dass sie zu dem Zeitpunkt, an dem Sie diesen Text lesen,
 
 Alle Einträge sind nach hier als '**usage**' (**Verwendung**) bezeichnete Verwendungen gegliedert: diese entsprechen Überschriften der Ebene 3 im Wiktionary. Die Verwendungen stimmen nicht (unbedingt) mit Lexemen überein: zu einer Verwendung können mehrere Lexemen (Bedeutungen) gehören (s. 
 z.B. 
-'[Staat](https://de.wiktionary.org/wiki/Staat)'). Unterschiedliche spezielle Wortarten (worauf `spec_word_type` hinweist) benötigen aber ihre eigene Verwendungen (s. z.B. '[Hahn](https://de.wiktionary.org/wiki/Hahn)'), und dies gilt auch für dialektale Wörter, und für Fälle, in denen 
+'[Staat](https://de.wiktionary.org/wiki/Staat)'). Unterschiedliche spezielle Wortarten (worauf `spec_word_type` hinweist) benötigen aber ihre eigene Verwendungen 
+(s. z.B. '[Hahn](https://de.wiktionary.org/wiki/Hahn)'), und dies gilt auch für dialektale Wörter, und für Fälle, in denen 
 unterschiedliche 
 Deklinationen unterschliedlichen Lexemen entsprechen (s. z.B. '[Reis](https://de.wiktionary.org/wiki/Reis#Reis_(Deutsch))').
 
@@ -117,7 +124,41 @@ Das Merkmal `tantum` weist darauf hin, dass die jeweilige Verwendung des Substan
 
 Das Merkmal `spec_word_type` weist auf eine spezielle Wortart hin, z.B. wenn ein Substantiv als Nachname oder Toponym verwendet wird.
 
-### <a name="json-GermanNounEntriesTranslationDict"></a>Grundstruktur eines `GermanNounEntriesTranslationDict` Wörterbuchs (enthält Übersetzungen):
+### <a name="json-GermanAdjEntriesDict"></a>Grundstruktur eines `GermanAdjEntriesDict` Wörterbuchs (enthält grammatikalische Informationen über Adjektive):
+
+```
+{
+ <adj_headword>: 
+	{'u<usage_#>': 
+		{'deg_of_comp':
+			{'positiv': [<form1>,],
+			 'komparativ': [<form1>,],
+			 'superlativ': [<form1>,],
+			},
+	 	 'spec_comp': ['no_am'|'no_other_forms',],
+		 'decl_feat': ['no_comp'|'no_decl'],
+		 'attr_pred': ['attr_only'|'pred_only'],
+		},
+	},
+}
+```
+
+Alle Einträge sind auch hier nach *Verwendungen* ('*usage*') gegliedert, wie bei Substantiven.
+
+Das Merkmal `deg_of_comp` sammelt die positive, komparative und superlative Formen zusammen.
+
+Die Werte unter dem Merkmal `spec_comp` können die folgenden sein:
+* `no_am`: weist darauf hin, dass 'am' ist nicht im Superlativ zu verwenden.
+* `no_other_forms`: weist darauf hin, dass das Adjektiv keine weiteren Formen hat außer die, die unter `deg_of_comp` steht. 
+
+Die Werte unter dem Merkmal `decl_feat` können die folgenden sein: 
+* `no_comp`: weist darauf hin, dass die entsprechende Verwendung (*usage*) keine gesteigerte Formen hat.
+* `no_decl`: weist darauf hin, dass die entsprechende Verwendung (*usage*) keine deklinierte Formen hat.
+
+Schießlich kann `attr_pred` darauf hinweisen, dass die entsprechende Verwendung (*usage*) nur attributiv (`attr_only`) oder nur prädikativ (`pred_only`) ist. 
+Da diese Information sehr selten ist, und sowieso meistens für Lexeme (Bedeutunge) angegeben wird (s., z.B., [_interessiert_](https://de.wiktionary.org/wiki/interessiert)), ist sie nur bei wenigen Adjektiven anzufinden. 
+
+### <a name="json-GermanNounTranslationDict"></a>Grundstruktur eines Übersetzungswörterbuchs (`GermanNounTranslationDict` und `GermanAdjTranslationDict`):
 
 ```
 {
@@ -143,7 +184,7 @@ Die unterschiedlichen `m`-Indizes entsprechen unterschiedlichen Lexemen (Bedeutu
 
 ## <a name="remarks"></a>Hinweise zu den Wörterbuch-Inhalten
 
-* Stichwörter (Lemmas), die Leerzeichen enthalten (z.B. [Vereinigte Staaten](https://de.wiktionary.org/wiki/Vereinigte_Staaten)) und Wörter, die ein Zeichen lang sind (z.B. [A](https://de.wiktionary.org/wiki/A)) werden **nicht** in die generierten Wörterbücher eingetragen.
+* Substantive, die ein Leerzeichen enthalten (z.B. [Vereinigte Staaten](https://de.wiktionary.org/wiki/Vereinigte_Staaten)) und Wörter, die ein Zeichen lang sind (z.B. [A](https://de.wiktionary.org/wiki/A)) werden **nicht** in die generierten Wörterbücher eingetragen.
 
 * Schon ein flüchtiger Blick an die regulären Ausdrücke, die wir verwenden mussten, zeigt, dass das automatische Parsen von Wiktionary-Seiten nicht gerade einfach ist. Trotz aller Bemühungen der Redakteure des deutschen Wiktionary sind Fehler in so großen Projekten unvermeidbar. 
 Zum Glück gibt es relativ wenige schwerwiegende Fehler in den Seiten, die wir verarbeitet haben (zumindest in den Teilen woran wir uns interessierten).
@@ -156,4 +197,4 @@ eingegeben haben.
     *pl* (z.B. [Seschellen](https://de.wiktionary.org/wiki/Seschellen)) als Genus eingetragen.
 
 * Eine weitere kleine Menge Fehler stammen aus den automatischen Skripten, die für eine kleine Minderheit der Einträge nicht geeignet sind.
-Zum Beispiel ist das Algorithmus für mehrwörtige deklinierte Forme (siehe [Beschreibeung des Merkmals `spec_pre`](#specpre)) problematisch in ein Paar speziellen Fällen, siehe z.B. das dialektale Wort [Teifi](https://de.wiktionary.org/wiki/Teifi). 
+Zum Beispiel ist das Algorithmus für mehrwörtige deklinierte Forme der Substantive (siehe [Beschreibeung des Merkmals `spec_pre`](#specpre)) problematisch in ein Paar speziellen Fällen, siehe z.B. das dialektale Wort [Teifi](https://de.wiktionary.org/wiki/Teifi). 

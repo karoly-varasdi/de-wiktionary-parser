@@ -5,7 +5,7 @@ import re
 import json
 import pprint
 from collections import defaultdict
-
+from prettytable import PrettyTable
 
 ###################################
 #  Super-class for dictionaries   #
@@ -109,6 +109,57 @@ class WordEntriesDict(dict):
         pprint.pprint(self[entry])
 
 
+    def tabulate_entry(self, noun: str, verbose=False):
+           ''' Displays a word entry in a tabulated form. Not to be used with inverse dictionaries. Requires the prettytable or the PTable package. The switch 'verbose' affects the details displayed (default: False). '''
+           try:
+               branchlist = branches(self[noun])
+               if isinstance(self[noun], list):
+                   print('\n {0} |--> {1}'.format(noun, ', '.join(sorted(self[noun]))))
+                   return
+               elif any(feat in br for br in branchlist for feat in ['deg_of_comp', 'spec_comp', 'decl_feat', 'attr_pred']):
+                   self.word_entry(noun)
+                   return
+           except KeyError:
+               print("'{0}' is not in dictionary.".format(noun))
+               return
+           table = PrettyTable()
+           table.title = noun  # Works only if the package PTable is installed
+           table.field_names = ["Usage", "SpecFeat", "Gen/Case/Lang", "Num/Lex", "Decl", "Value"]
+           usage_flag = False
+           specfeat_flag = False
+           # table.align["Genus/Case"] = "l"
+           # table.align["Num"] = "l"
+           emptyrow = ["", "", "", "", "", ""]
+           usages = partition_branches(branchlist)
+           for usage in usages:
+               table.add_row(emptyrow)
+               for decl in usage:
+                   for row in decl:
+                       row[0] = row[0][1]
+                       if row[0] != '1':
+                           usage_flag = True
+                       if row[1] == 'gen_case_num':
+                           row[1] = ''
+                       if row[1]:
+                           specfeat_flag = True
+                       if not row[-1]:
+                           row[-1] = ['-']
+                       row[-1] = ', '.join(row[-1])
+                       table.add_row(row)
+                   table.add_row(emptyrow)
+           if verbose:
+               print(table)
+           elif usage_flag and specfeat_flag:
+               print(table.get_string(fields=["Usage", "SpecFeat", "Gen/Case/Lang", "Num/Lex", "Value"]))
+           elif usage_flag:
+               print(table.get_string(fields=["Usage", "Gen/Case/Lang", "Num/Lex", "Value"]))
+           elif specfeat_flag:
+               print(table.get_string(fields=["SpecFeat", "Gen/Case/Lang", "Num/Lex", "Value"]))
+           else:
+               print(table.get_string(fields=["Gen/Case/Lang", "Num/Lex", "Value"]))
+
+
+
 ############################################
 #  Dictionary manipulation functions       #
 ############################################
@@ -125,15 +176,15 @@ def set_by_keypath(dic:dict, keypath:list, val):
     dic[keypath[-1]] = val
 
 
-def leaf_collector(dic:dict) -> list:
-    ''' Collects the leaves in a dictionary. '''
-    leaves = []
+def twig_collector(dic:dict) -> list:
+    ''' Collects the twigs in a dictionary. '''
+    twigs = []
     if not isinstance(dic, dict):
         return [dic]
     else:
         for val in dic.values():
-            leaves.extend(leaf_collector(val))
-    return leaves
+            twigs.extend(twig_collector(val))
+    return twigs
 
 
 def nextlevel_keys(dic:dict, keypath:list):
@@ -157,31 +208,46 @@ def branches(tree:dict, keypath=list()) -> list:
                 branches_list.append(br)
     return branches_list
 
+def partition_branches(branchlist):
+    branchlist = preproc(branchlist)
+    usages = sorted([[li for li in branchlist if li[0] == u] for u in {li[0] for li in branchlist}], key=lambda x: ordering0.index(x[0][0]))
+    partition = []
+    for use in usages:
+        same_decls = [[li for li in use if li[-2] == d] for d in {us[-2] for us in use}]
+        same_decls_sorted = sorted(same_decls, key=lambda x: ordering4.index(x[0][-2]))
+        partition.append(same_decls_sorted)
+    return partition
 
-########################
-# Major-level regexes  #
-########################
+def preproc(branchlist):
+    new_brl = []
+    for li in branchlist:
+        new_li = li[:]
+        for i, el in enumerate(li):
+            if el == 'translations':
+                new_li[i + 3:i + 3] = [' ']
+            if el == 'genus':
+               new_li[i+1:i+1] = ['']
+            if el == 'spec_word_type':
+                new_li[i+1:i+1] = ['', '', '']
+            if el == 'tantum':
+                new_li[i+1:i+1] = ['', '', '']
+        new_brl.append(new_li)
+    return new_brl
 
-de_noun_regex = re.compile(r"([^=]|^|\n)=== \{\{Wortart\|(Substantiv|Abkürzung|Toponym|Nachname|Vorname|Eigenname|Name|Buchstabe|Zahlklassifikator|Straßenname)\|Deutsch\}\}")
-de_headword_regex = re.compile(r"([^=]|^|\n)== (\w\S+) \(\{\{Sprache\|Deutsch")  # noun_form is .group(2)
-new_heading_two_regex = re.compile(r"([^=]|^|\n)== (\w\S+) \(\{\{Sprache\|(?P<lang>\w+)")
-new_usage_pattern = re.compile(r"""=== {{Wortart\|([^\|]+)\|Deutsch}}""", re.U)  # A 3rd-level heading specifying word type (Wortart) and German (Deutsch) as the language
-# Ex.: "=== {{Wortart|Substantiv|Deutsch}}, {{f}} ==="
 
-title_pattern = re.compile(r"<title>(?P<pagetitle>(.(?!</title>))+.)</title>")
-text_begin_pattern = re.compile(r"<text")
-text_end_pattern = re.compile(r"</text>")
-
-# https://de.wiktionary.org/wiki/Hilfe:Namensräume
-# Pages will be ignored if title begins with:
-namensraum_simple = r"(Benutzer|Wiktionary|Datei|MediaWiki|Vorlage|Hilfe|Kategorie|Verzeichnis|Thesaurus|Reim|Flexion|Modul|Spezial|Medium|Diskussion)"
-colon = r"\:"
-diskussion_colon = r" Diskussion:"
+ordering0 = ['u1', 'u2', 'u3', 'u4', 'u5', 'u6']
+ordering4 = ['sg1', 'sg2', 'sg3', 'sg4', 'pl1', 'pl2', 'pl3', 'pl4', '', ' ']
 
 
 ############################################
 #  String manipulation before parsing      #
 ############################################
+
+# https://de.wiktionary.org/wiki/Hilfe:Namensräume
+# Pages will be ignored if title begins with:
+namensraum_simple = r"(Spezial|Medium|Diskussion|Vorlage|Verzeichnis|Thesaurus|Reim|Flexion|Hilfe|Kategorie|Benutzer|Gadget|Gadget-Definition|Wiktionary|Datei|MediaWiki|Modul|Benutzerin|BD|WT|Bild|Image|WikiSaurus)"
+colon = r"\:"
+diskussion_colon = r" Diskussion:"
 
 ''' strings to remove from xml to clean it before parsing: '''
 
@@ -198,6 +264,7 @@ html_break = r"(<|\&lt;)br\s*/*(>|\&gt;)"
 angle_quoted_string = r"\(?\u00bb[^\u00ab]+\u00ab\)?"  # stuff between angle quotation marks usually comments, but these are not deleted for now.
 quoted_string = r"\(?„[^“]+“\)?"
 
+
 '''list of all strings to delete:'''
 
 to_del_strings = [html_comment_string, wiki_comment_string, nowiki_string, html_tag_string, html_tag_string_onetag, unicode_char_to_del]
@@ -206,13 +273,73 @@ to_del_strings = [html_comment_string, wiki_comment_string, nowiki_string, html_
 '''strings to replace:'''
 wiki_link_string = r'\[\[([^\|\]]+\|)?([^\]]+)\]\]'  ## delete all hyperlink indicators: string = re.sub(wiki_link_string, r'\2', string)
 specstring = r"\&(amp)?;nbsp;" # e.g., "nothing&nbsp;of&nbsp;", replace as space: string = re.sub(specstring, ' ', string)
-quote_html = r'\&quot;'  # replace as ": string = re.sub(quote_html, '"', string)
+quote_html = r'&quot;'  # replace as ": string = re.sub(quote_html, '"', string)
+amp_html = r'&amp;'  # replace as ": string = re.sub(amp_html, '&', string)
 
 def clean_up_string(string:str):
     string = re.sub(wiki_link_string, r'\2', string)
     string = re.sub(specstring, ' ', string)
     string = re.sub(quote_html, '"', string)
+    string = re.sub(amp_html, '&', string)
     for to_del_string in to_del_strings:
         string = re.sub(to_del_string, '', string)
     return string
 
+
+########################
+# Major-level regexes  #
+########################
+
+de_headword_regex = re.compile(r"([^=]|^|\n)== (\w\S+) \(\{\{Sprache\|Deutsch")  # headword is .group(2)
+de_headword_spaces_allowed_regex = re.compile(r"([^=]|^|\n)== (\w(.(?!\(\{\{Sprache\|))+) \(\{\{Sprache\|Deutsch")  # headword is .group(2)
+new_heading_two_regex = re.compile(r"([^=]|^|\n)== (\w\S+) \(\{\{Sprache\|(?P<lang>\w+)")
+new_heading_two_spaces_allowed_regex = re.compile(r"([^=]|^|\n)== (\w(.(?!\(\{\{Sprache\|))+) \(\{\{Sprache\|(?P<lang>\w+)")
+new_usage_pattern = re.compile(r"""=== {{Wortart\|([^\|]+)\|Deutsch}}""", re.U)  # A 3rd-level heading specifying word type (Wortart) and German (Deutsch) as the language
+# Ex.: "=== {{Wortart|Substantiv|Deutsch}}, {{f}} ==="
+### for finding information in the new usage (===) line:
+new_usage_line = re.compile(r"""[^\n]*[^=]?===\s{{Wortart\|[^\|]+\|Deutsch}}[^\n]+""", re.M | re.U)
+
+title_pattern = re.compile(r"<title>(?P<pagetitle>(.(?!</title>))+.)</title>")
+text_begin_pattern = re.compile(r"<text")
+text_end_pattern = re.compile(r"</text>")
+
+
+###################################
+##   POS-specific definitions    ##
+###################################
+
+de_noun_regex = re.compile(r"([^=]|^|\n)=== \{\{Wortart\|(Substantiv|Abkürzung|Toponym|Nachname|Vorname|Eigenname|Name|Buchstabe|Zahlklassifikator|Straßenname)\|Deutsch\}\}")
+de_adj_regex = re.compile(r"([^=]|^|\n)=== \{\{Wortart\|Adjektiv\|Deutsch\}\}")
+
+
+########################################
+##  Translation-specific definitions  ##
+########################################
+
+''' Translations-specific delete list  '''
+
+empty_entrans_tag = r"\{\{Ü\|en\}\}"  # e.g., in 'Windschutzscheibenwaschanlage'
+wiki_tag_string = r"\(?\{\{[^Ü][^\}]*\}\}\)?"  # delete all non-translation tags, e.g., {{amer.}}
+wiki_italics_string = r"\(?''[^']+''\)?\s*"
+to_del_char_from_ubersetzung_tag = r"(\{\{Ü\|en\|[^\}]*),([^\}]*\}\})"  # to remove comma replace with \1\2 (e.g., "{{Ü|en|atomic absorption spectrometry, en|atomic absorption spectroscopy}}")
+to_del_strings_transl = [wiki_italics_string, wiki_tag_string, empty_entrans_tag, angle_quoted_string, quoted_string] # note: order might matter (e.g, wiki_italics string before wiki_tag_string)
+
+
+''' Patterns and variables used to get translations '''
+
+transl_en_line_regex = re.compile(r"^\*\{\{en\}\}\:(.(?!\*+\{\{))+.", re.U | re.M)
+#    .group(0) = line with all English translations
+
+transl_lexeme_and_transl_regex = re.compile(r"\[(\d+[^\]]*)\]((.(?!\[\d))+.)", re.M)
+#   .group(1) = lexeme numbers specification, e.g., 1 or 1-4, or 1, 3
+#   .group(2) = all translations belonging to the lexeme(s)
+
+transl_lex_range_regex = re.compile(r"(\d+)[-–](\d+)")
+transl_lexes_from_lexeme_and_transl_regex = re.compile(r"(\d+)")
+transl_en_regex = re.compile(r"""
+    (?P<pretransl>[^\{\|\}]*)           # perhaps some stuff before {{Ü|en... belonging to translation (e.g., "[[play]] {{Ü|en|catch}}")               
+    \{\{Ü(t)?\|en(\|[^\}\|]+)?      # {{Ü|en or {{Üt|en indicates English translation; we need the first bunch after en, or the second, if there are multiple attributes inside {{Ü|en|...|....}}
+    \|(?P<transl>[^\}\|]+)
+    (\|[^\}\|]+)*\}\}                 # zero or more extra group after the translation group
+    (?P<posttransl>[^,;\{]*)    # potential post-translation stuff, currently not added.
+    """, re.X)

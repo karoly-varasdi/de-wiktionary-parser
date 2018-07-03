@@ -35,7 +35,7 @@ class GermanNounEntriesDict(WordEntriesDict):
 
     def full_info(self, decl_table: str):
         '''Returns a list of ('MORPH_pattern_regex', ['DECL_NUM', 'STARRED', 'VALUE']) tuples for morphological pattern regexes in the regexes dictionary.'''
-        return [(reg, re.findall(regexes_dic[reg], decl_table)) for reg in regexes_dic]
+        return [(reg, re.findall(regexes_noun_dic[reg], decl_table)) for reg in regexes_noun_dic]
         ## Sample output:
         # [('genus_pattern_regex', [('', '', 'f')]), ('nominativ_singular_pattern_regex', [('', '', 'Mutter')]), ('nominativ_plural_pattern_regex', [('1',
         # '', 'Mütter'), ('2', '', 'Muttern')]), ('genitiv_singular_pattern_regex', [('', '', 'Mutter')]), ('genitiv_plural_pattern_regex', [('1', '',
@@ -51,7 +51,7 @@ class GermanNounEntriesDict(WordEntriesDict):
         to_add_starred_pre = ()  # (keyseq, str) tuple for stuff preceding the actual value (typically in dialectal forms like 'Krebbelche' (e.g., "von dem")
 
         for pair in info:
-            morphs_list = keymaps[pair[0]]  # e.g., ['nominativ', 'singular'] or ['genus']
+            morphs_list = keymaps_noun[pair[0]]  # e.g., ['nominativ', 'singular'] or ['genus']
             list_of_triples = pair[1]  # (decl_num, *, value)
             morphs_pre_list = [morph + '_pre' for morph in morphs_list]  # e.g., ['nominativ_pre', 'singular_pre']
             for three_tupl in list_of_triples:
@@ -124,16 +124,18 @@ class GermanNounEntriesDict(WordEntriesDict):
         ###############################################################################################
         # First, retrieve grammatical information from "Übersicht" (declension) table, if available. #
         ###############################################################################################
-        uebersicht = re.search(uebersicht_regex, usage)
+        uebersicht = re.search(uebersicht_noun_regex, usage)
         if uebersicht:
             decl_table = uebersicht.group(2)
             try:
                 set_by_keypath(self, [noun_form, usage_index], self.parse_decl_table(decl_table))
-                for leaf in leaf_collector(self[noun_form][usage_index]):
-                    if '—' in leaf:
-                        leaf.remove('—')  # remove '—' from the list of values to add
-                    if '-' in leaf:
-                        leaf.remove('-')
+                for twig in twig_collector(self[noun_form][usage_index]):
+                    if '—' in twig:
+                        twig.remove('—')  # remove '—' from the list of values to add
+                    if '-' in twig:
+                        twig.remove('-')
+                    if '–' in twig:
+                        twig.remove('–')
             except:
                 print("Couldn't parse declension table:", noun_form, usage_index)
 
@@ -165,7 +167,7 @@ class GermanNounEntriesDict(WordEntriesDict):
             set_by_keypath(self, [noun_form, usage_index, 'decl_type'], ['-sch'])
 
         ## adjectival declension nouns like "Erwachsene":
-        uebersicht_adj = re.search(uebersicht_adj_regex, usage)
+        uebersicht_adj = re.search(uebersicht_adjektivisch_regex, usage)
         if uebersicht_adj:
             set_by_keypath(self, [noun_form, usage_index, 'decl_type'], ['adj'])
 
@@ -327,24 +329,24 @@ class GermanNounEntriesDict(WordEntriesDict):
 ##############################################################
 
 # The morphological attributes we will collect from noun declension tables (if available):
-MORPH_ATTRS = ['Genus', 'Nominativ Singular', 'Nominativ Plural', 'Genitiv Singular', 'Genitiv Plural', 'Dativ Singular', 'Dativ Plural', 'Akkusativ Singular', 'Akkusativ Plural', ]
+MORPH_ATTRS_NOUN = ['Genus', 'Nominativ Singular', 'Nominativ Plural', 'Genitiv Singular', 'Genitiv Plural', 'Dativ Singular', 'Dativ Plural', 'Akkusativ Singular', 'Akkusativ Plural', ]
 
-patterns_dic = {}
-for feat_name in MORPH_ATTRS:
-    patterns_dic[feat_name.lower().replace(' ', '_') + '_pattern'] = r"\|{0} ?(\d)? *(\*)?\** *= *([^\n\|]+)\s*".format(feat_name)
-    # patterns_dic[feat_name.lower().replace(' ', '_') + '_pattern'] = r"\|{0} ?(\d)? *(\*)?\** *= *(\S+|—)[^(\s+\w+)]?".format(feat_name)
-    # patterns_dic[feat_name.lower().replace(' ', '_') + '_pattern'] = r"\|{0} ?(\d)?(\*)? *= *(([0-9|,|-])*\w+(-\w+)*|—)[^(\s+\w+)]?".format(feat_name)
-    # patterns_dic[feat_name.lower().replace(' ', '_') + '_pattern'] = r"\|{0} ?(\d)?(\*)? *= *(\w+|—)[^(\s+\w+)]?".format(feat_name)
-    # patterns_dic[name.lower().replace(' ', '_')+'_pattern'] = r"\|{0} ?(\d)?(\*)? *= *(\w+|—)".format(name)
+patterns_noun_dic = {}
+for feat_name in MORPH_ATTRS_NOUN:
+    patterns_noun_dic[feat_name.lower().replace(' ', '_') + '_pattern'] = r"\|{0} ?(\d)? *(\*)?\** *= *([^\n\|]+)\s*".format(feat_name)
+    # patterns_noun_dic[feat_name.lower().replace(' ', '_') + '_pattern'] = r"\|{0} ?(\d)? *(\*)?\** *= *(\S+|—)[^(\s+\w+)]?".format(feat_name)
+    # patterns_noun_dic[feat_name.lower().replace(' ', '_') + '_pattern'] = r"\|{0} ?(\d)?(\*)? *= *(([0-9|,|-])*\w+(-\w+)*|—)[^(\s+\w+)]?".format(feat_name)
+    # patterns_noun_dic[feat_name.lower().replace(' ', '_') + '_pattern'] = r"\|{0} ?(\d)?(\*)? *= *(\w+|—)[^(\s+\w+)]?".format(feat_name)
+    # patterns_noun_dic[name.lower().replace(' ', '_')+'_pattern'] = r"\|{0} ?(\d)?(\*)? *= *(\w+|—)".format(name)
 # {'genus_pattern': '\\|Genus ?(\\d)?(\\*)?=(\\w+|—)', 'nominativ_singular_pattern': '\\|Nominativ Singular ?(\\d)?(\\*)?=(\\w+|—)',
 # 'nominativ_plural_pattern': '\\|Nominativ Plural ?(\\d)?(\\*)?=(\\w+|—)', 'genitiv_singular_pattern': '\\|Genitiv Singular ?(\\d)?(\\*)?=(
 # \\w+|—)', 'genitiv_plural_pattern': '\\|Genitiv Plural ?(\\d)?(\\*)?=(\\w+|—)', 'dativ_singular_pattern': '\\|Dativ Singular ?(\\d)?(\\*)?=(
 # \\w+|—)', 'dativ_plural_pattern': '\\|Dativ Plural ?(\\d)?(\\*)?=(\\w+|—)', 'akkusativ_singular_pattern': '\\|Akkusativ Singular ?(\\d)?(\\*)?=(
 # \\w+|—)', 'akkusativ_plural_pattern': '\\|Akkusativ Plural ?(\\d)?(\\*)?=(\\w+|—)'}
 
-regexes_dic = {}
-for pattern in patterns_dic:
-    regexes_dic[pattern + '_regex'] = re.compile(patterns_dic[pattern])
+regexes_noun_dic = {}
+for pattern in patterns_noun_dic:
+    regexes_noun_dic[pattern + '_regex'] = re.compile(patterns_noun_dic[pattern])
 # {'genus_pattern_regex': re.compile('\\|Genus ?(\\d)?(\\*)?=(\\w+|—)'), 'nominativ_singular_pattern_regex': re.compile('\\|Nominativ Singular ?(
 # \\d)?(\\*)?=(\\w+|—)'), 'nominativ_plural_pattern_regex': re.compile('\\|Nominativ Plural ?(\\d)?(\\*)?=(\\w+|—)'),
 # 'genitiv_singular_pattern_regex': re.compile('\\|Genitiv Singular ?(\\d)?(\\*)?=(\\w+|—)'), 'genitiv_plural_pattern_regex': re.compile(
@@ -352,21 +354,21 @@ for pattern in patterns_dic:
 # 'dativ_plural_pattern_regex': re.compile('\\|Dativ Plural ?(\\d)?(\\*)?=(\\w+|—)'), 'akkusativ_singular_pattern_regex': re.compile('\\|Akkusativ
 # Singular ?(\\d)?(\\*)?=(\\w+|—)'), 'akkusativ_plural_pattern_regex': re.compile('\\|Akkusativ Plural ?(\\d)?(\\*)?=(\\w+|—)')}
 
-keymaps = {reg_name: reg_name.split('_')[:-2] for reg_name in regexes_dic}
+keymaps_noun = {reg_name: reg_name.split('_')[:-2] for reg_name in regexes_noun_dic}
 # {'genus_pattern_regex': ['genus'], 'nominativ_singular_pattern_regex': ['nominativ', 'singular'], 'nominativ_plural_pattern_regex': ['nominativ',
 # 'plural'], 'genitiv_singular_pattern_regex': ['genitiv', 'singular'], 'genitiv_plural_pattern_regex': ['genitiv', 'plural'],
 # 'dativ_singular_pattern_regex': ['dativ', 'singular'], 'dativ_plural_pattern_regex': ['dativ', 'plural'], 'akkusativ_singular_pattern_regex': [
 # 'akkusativ', 'singular'], 'akkusativ_plural_pattern_regex': ['akkusativ', 'plural']}
 
 
-###########################################
-# Grammatical information regexes #
-###########################################
+########################################
+# Noun grammatical information regexes #
+########################################
 
-uebersicht_regex = re.compile(r"\{\{Deutsch (Substantiv|Abkürzung|Toponym|Name|Nachname|Vorname|Eigenname|Buchstabe|Zahlklassifikator) Übersicht([^\}]+)\}\}", re.DOTALL)  # this is the übersicht (the decl. table)
+uebersicht_noun_regex = re.compile(r"\{\{Deutsch (Substantiv|Abkürzung|Toponym|Name|Nachname|Vorname|Eigenname|Buchstabe|Zahlklassifikator) Übersicht([^\}]+)\}\}", re.DOTALL)  # this is the übersicht (the decl. table)
 uebersicht_sch_regex = re.compile(r"\{\{Deutsch Substantiv Übersicht\s+-sch[^\}]*\}\}", re.DOTALL)
 uebersicht_toponym_regex = re.compile(r"\{\{Deutsch Toponym Übersicht[^\}]*\}\}", re.DOTALL)
-uebersicht_adj_regex = re.compile(r"\{\{Deutsch adjektivisch Übersicht[^\}]*\}\}", re.DOTALL)
+uebersicht_adjektivisch_regex = re.compile(r"\{\{Deutsch adjektivisch Übersicht[^\}]*\}\}", re.DOTALL)
 
 adj_decl_pattern = re.compile(r"([^=]|^|\n)=== {{Wortart\|Substantiv\|Deutsch}}[^']+('')?adjektivische Deklination('')?", re.U)  # the "''adjektivische Deklination''" text follows the nominal word type new usage indicator.
 # Ex.: "=== {{Wortart|Substantiv|Deutsch}}, {{f}}, ''adjektivische Deklination'' ==="
@@ -377,8 +379,6 @@ adj_decl_pattern = re.compile(r"([^=]|^|\n)=== {{Wortart\|Substantiv\|Deutsch}}[
 #     """, re.X)
 
 
-### finding information in the new usage (===) line:
-new_usage_line = re.compile(r"""[^\n]*[^=]?===\s{{Wortart\|\w+\|Deutsch}}[^\n]+""", re.M | re.U)
 ## if new_usage_line, then we can look for multiple matches of gender:
 gender_from_wortart_pattern_main = re.compile(r"{{(?P<gender>[fmn]+)\.?}}")  # for some reason, mn (masculine and neutral) is followed by a period: {{mn.}}. Then we need the closing curly brackets.
 

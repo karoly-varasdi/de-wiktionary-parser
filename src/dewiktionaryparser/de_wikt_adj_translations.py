@@ -3,9 +3,7 @@
 
 from .common_defs import *
 
-# This script creates a dictionary of (currently only English) translations of German nouns and abbreviations.
-# Note: no filtering for Abbreviation-only entries, so the translations contain entries like "usw." ('etc.').
-# Note: not all German noun entries have English translations. (Especially special word types like family names tend not to.) Also, not all lexemes of a noun usage have associated translations.
+# This script creates a dictionary of (currently only English) translations of German adjectives.
 
 '''
 See German wiktionary help files on translations:
@@ -13,7 +11,7 @@ https://de.wiktionary.org/wiki/Hilfe:Übersetzungen
 https://de.wiktionary.org/wiki/Hilfe:Ü-Vorlagen
 '''
 
-class GermanNounTranslationDict(WordEntriesDict):
+class GermanAdjTranslationDict(WordEntriesDict):
 
     def make_inv_dict(self, exclude=list(), include=list({'translations'})):
         '''Returns an inverse dictionary containing by default (with exclude=list(), include=list({'translations'})) only translations as keys.'''
@@ -25,7 +23,7 @@ class GermanNounTranslationDict(WordEntriesDict):
         with open(file_path, 'r', encoding=encoding) as wikif:
             page_list = []
             page_no = 0
-            print('Generating noun translations from wiktionary source: {0}\nThis may take several minutes . . .'.format(file_path))
+            print('Generating adjective translations from wiktionary source: {0}\nThis may take several minutes . . .'.format(file_path))
             for line in wikif:
                 page_list.append(line)
                 if '</page>' in line:
@@ -39,17 +37,17 @@ class GermanNounTranslationDict(WordEntriesDict):
 
                     page_list = one_page_str.splitlines()
 
-                    if re.search(de_noun_regex, one_page_str) is None:
+                    if re.search(de_adj_regex, one_page_str) is None:
                         page_list = []
                         continue
 
-                    word_match = re.search(de_headword_regex, one_page_str)
+                    word_match = re.search(de_headword_spaces_allowed_regex, one_page_str)
                     if word_match:
                         title_match = re.search(title_pattern, one_page_str)
                         if title_match:
-                            noun_form = title_match.group('pagetitle')
+                            adj_form = title_match.group('pagetitle')
                             ## Ignore pages under wiktionary-namespaces:
-                            if re.match(namensraum_simple + colon, noun_form) or re.match(namensraum_simple + diskussion_colon, noun_form):
+                            if re.match(namensraum_simple + colon, adj_form) or re.match(namensraum_simple + diskussion_colon, adj_form):
                                 page_list = []
                                 continue
                         else:
@@ -58,17 +56,17 @@ class GermanNounTranslationDict(WordEntriesDict):
                     else:
                         page_list = []
                         continue
-                    self.parse_word_page_transl(page_list, noun_form, strict)
+                    self.parse_word_page_transl(page_list, adj_form, strict)
                     try:
-                        if not self[noun_form]:
-                            del self[noun_form]
+                        if not self[adj_form]:
+                            del self[adj_form]
                     except KeyError:
                         pass
                     page_list = []
             print('\nRead {0} pages.'.format(page_no))
             print('Generated {0} entries.'.format(len(self)))
 
-    def parse_word_page_transl(self, page_list: list, noun_form: str, strict=False):
+    def parse_word_page_transl(self, page_list: list, adj_form: str, strict=False):
         '''Parses a German word page (between <page> .. </page> tags) from the xml file, separates it into usages and calls the usage parser function on each usage.'''
         not_german_word = False
         usages = []
@@ -92,17 +90,17 @@ class GermanNounTranslationDict(WordEntriesDict):
         usages.append(usage)  # because no "new_usage_pattern" at the end of the page, we need this after the for-cycle to add the last usage to the usages list.
         usages.pop(0)
         for usage in usages:
-            # we do not want to include usages that are not German nouns (e.g., the Interjektion for 'Alter'):
-            if not re.search(de_noun_regex, '\n'.join(usage)):
+            # we do not want to include usages that are not German adjectives:
+            if not re.search(de_adj_regex, '\n'.join(usage)):
                 continue
             usage_index = "u" + str(usages.index(usage) + 1)  # so usage numbering starts from 1, not 0
             if strict:
-                self.parse_usage_for_en_translation_strict('\n'.join(usage), usage_index, noun_form)
+                self.parse_usage_for_en_translation_strict('\n'.join(usage), usage_index, adj_form)
             else:
-                self.parse_usage_for_en_translation_greedy('\n'.join(usage), usage_index, noun_form)
+                self.parse_usage_for_en_translation_greedy('\n'.join(usage), usage_index, adj_form)
 
-    def parse_usage_for_en_translation_strict(self, usage: str, usage_index: str, noun_form: str):
-        '''Parses a word usage (level 3 heading in wiktioanry) for translations of the German noun. Uses a strict heuristic, only collecting information from the translation tags (e.g., "[[insect]] {{Ü|en|colony}}" will be entered as "colony").'''
+    def parse_usage_for_en_translation_strict(self, usage: str, usage_index: str, adj_form: str):
+        '''Parses a word usage (level 3 heading in wiktioanry) for translations of the German adjective. Uses a strict heuristic, only collecting information from the translation tags (e.g., "[[insect]] {{Ü|en|colony}}" will be entered as "colony").'''
         transl_en_line_match = re.search(transl_en_line_regex, usage)
         if transl_en_line_match:
             transl_en_line = transl_en_line_match.group(0)
@@ -142,13 +140,13 @@ class GermanNounTranslationDict(WordEntriesDict):
                         for lexeme in lexemes:
                             lexeme = 'm' + lexeme  # adding 'm' for 'meaning'
                             try:
-                                to_add = get_by_keypath(self, [noun_form, usage_index, 'translations', 'en', lexeme]) + lexeme_translations
+                                to_add = get_by_keypath(self, [adj_form, usage_index, 'translations', 'en', lexeme]) + lexeme_translations
                             except KeyError:
                                 to_add = lexeme_translations
-                            set_by_keypath(self, [noun_form, usage_index, 'translations', 'en', lexeme], to_add)
+                            set_by_keypath(self, [adj_form, usage_index, 'translations', 'en', lexeme], to_add)
 
-    def parse_usage_for_en_translation_greedy(self, usage: str, usage_index: str, noun_form: str):
-        '''Parses a word usage (level 3 heading in wiktioanry) for translations of the German noun. Uses a looser, more greedy heuristic, and collects information from before the translation tags (e.g., "[[insect]] {{Ü|en|colony}}" will be entered as "insect colony")'''
+    def parse_usage_for_en_translation_greedy(self, usage: str, usage_index: str, adj_form: str):
+        '''Parses a word usage (level 3 heading in wiktioanry) for translations of the German adjective. Uses a looser, more greedy heuristic, and collects information from before the translation tags (e.g., "[[insect]] {{Ü|en|colony}}" will be entered as "insect colony")'''
         transl_en_line_match = re.search(transl_en_line_regex, usage)
         if transl_en_line_match:
             transl_en_line = transl_en_line_match.group(0)
@@ -199,9 +197,8 @@ class GermanNounTranslationDict(WordEntriesDict):
                         for lexeme in lexemes:
                             lexeme = 'm' + lexeme  # adding 'm' for 'meaning'
                             try:
-                                to_add = get_by_keypath(self, [noun_form, usage_index, 'translations', 'en', lexeme]) + lexeme_translations
+                                to_add = get_by_keypath(self, [adj_form, usage_index, 'translations', 'en', lexeme]) + lexeme_translations
                             except KeyError:
                                 to_add = lexeme_translations
-                            set_by_keypath(self, [noun_form, usage_index, 'translations', 'en', lexeme], to_add)
-
+                            set_by_keypath(self, [adj_form, usage_index, 'translations', 'en', lexeme], to_add)
 

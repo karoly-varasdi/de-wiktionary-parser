@@ -3,16 +3,17 @@
 
 Ein Python-Programm für das Parsen von einer [.xml Datei des deutschen Wiktionary](https://dumps.wikimedia.org/dewiktionary), mit der Möglichkeit, die Ergebnisse in eine .json Datei zu exportieren.
 
-Die aktuelle Version kann ausgewählte Merkmale deutscher Substantive (wie etwa Informationen über Geschlecht, Deklination, spezielle Wortarten), sowie die englische Übersetzung deutscher Substantive und Abkürzungen extrahieren.
+Die aktuelle Version kann ausgewählte Merkmale deutscher Substantive (wie etwa Informationen über Geschlecht, Deklination, spezielle Wortarten) und Adjektive (hauptsächlich die gesteigerten Formen), sowie die englische Übersetzung deutscher Substantive, Abkürzungen und Adjektive extrahieren.
 
 ## Inhaltsverzeichnis
 
 * [Die Ressourcen](#resources)
 * [Wörterbucharten](#dictionary-types)
 * [Wörterbuchstruktur](#json-structure)
-	* [Grundstruktur eines `GermanNounEntriesDict` Wörterbuchs (enthält grammatikalische Informationen)](#json-GermanNounEntriesDict)
-	* [Grundstruktur eines `GermanNounEntriesTranslationDict` Wörterbuchs (enthält Übersetzungen)](#json-GermanNounEntriesTranslationDict)
-	* [Hinweise zu den Wörterbuch-Inhalten](#remarks)
+	* [Grundstruktur eines `GermanNounEntriesDict` Wörterbuchs (enthält grammatikalische Informationen über Substantive)](#json-GermanNounEntriesDict)
+	* [Grundstruktur eines `GermanAdjEntriesDict` Wörterbuchs (enthält grammatikalische Informationen über Adjektive)](#json-GermanAdjEntriesDict)
+	* [Grundstruktur eines Übersetzungswörterbuchs (`GermanNounTranslationDict` und `GermanAdjTranslationDict`)](#json-German-TranslationDict)
+* [Hinweise zu den Wörterbuch-Inhalten](#remarks)
 * [Installation](#installation)
 * [Ein Musterskript](#sample)
 * [Autoren und Lizenz](#authors-and-license)
@@ -27,23 +28,32 @@ nehmen Sie einfach das Wörterbuch aus dem **[data](./data/)** Ordner, das Sie b
 
 Nur falls Sie selbst die Wörterbücher generieren möchten, oder mit dem Skript experimentieren möchten, müssen Sie das Python-Paket [installieren](#installation).
 
+Für eine detaillierte Dokumentation, siehe bitte die folgenden Dateien im *[docs](./docs/)* Ordner:
+1. Die Dokumentationsdateien [**hilfe_worterbucher.md**](./docs/hilfe_worterbucher.md) (auf Deutsch) und [**help_dictionaries.md**](./docs/help_dictionaries.md) (auf Englisch) beschreiben die Wörterbücher und deren Struktur.
+2. Die englisch-sprachige Dokumentationsdatei [**help_python_modules.md**](./docs/help_python_modules.md) beschreibt die Funktionalitäten der Python-Module.
+
 
 ## <a name="dictionary-types"></a>Wörterbucharten 
-Wir haben drei Klassen definiert, die drei Wörterbucharten entsprechen: 
-1. `GermanNounEntriesDict`: eine Art Wörterbuch, dessen Einträge grammatikalische (morphologische und verwendungsbezogene) Informationen des deutschen Wiktionary über deutsche Substantive enthalten.
-2. `GermanNounEntriesTranslationDict`: eine Art Wörterbuch, dessen Einträge (vorerst nur englische) Übersetzungen deutscher Substantive enthalten, gegliedert nach Verwendungen und Lexemen.
-3. `WordEntriesDict`: eine Oberklasse der beiden obenen Klassen. 
+Wir haben unterschiedliche Klassen von Wörterbücher definiert, die unterschiedlichen Wörterbucharten entsprechen:
+1. Substantiv-bezogene Wörterbücher:
+    1. `GermanNounEntriesDict`: eine Art Wörterbuch, dessen Einträge grammatikalische (morphologische und verwendungsbezogene) Informationen über deutsche Substantive aus dem deutschen Wiktionary enthalten.
+    2. `GermanNounTranslationDict`: eine Art Wörterbuch, dessen Einträge (vorerst nur englische) Übersetzungen deutscher Substantive enthalten, gegliedert nach Verwendungen und Lexemen.
+    
+2. Adjektiv-bezogene Wörterbücher:
+    1. `GermanAdjEntriesDict`: eine Art Wörterbuch, dessen Einträge grammatikalische Informationen (hauptsächlich über gesteigerte Formen) über deutsche Adjektive aus dem deutschen Wiktionary enthalten.
+    2. `GermanAdjTranslationDict`: eine Art Wörterbuch, dessen Einträge (vorerst nur englische) Übersetzungen deutscher Adjektive enthalten, gegliedert nach Verwendungen und Lexemen.
+    
+3. `WordEntriesDict`: eine Oberklasse der obenen Klassen. 
 
-`GermanNounEntriesDict` und `GermanNounEntriesTranslationDict` Wörterbücher werden von Parser-Skripten generiert, die eine xml-Datei des deutschen Wiktionary parsen. 
+Die Wörterbücher werden von Parser-Skripten mit Informationen aufgeladen, die eine xml-Datei des deutschen Wiktionary parsen. 
 Das Ergebnis der Parsing-Phase kann dann in das weit verbreitete JSON Format exportiert (gespeichert) werden.
 
-Neben der Möglichkeit, Wörterbücher zu generieren und zu speichern, gibt es Methoden und Funktionen, die diese Wörterbücher manipulieren, durchsuchen oder abbilden. Siehe die englisch-sprachige Dokumentationsdatei [*help_python_modules.md*](./docs/help_python_modules.md) im 
-*docs* Ordner über die Funktionalitäten der Python-Module.  
+Neben der Möglichkeit, Wörterbücher zu generieren und zu speichern, gibt es Methoden und Funktionen, die diese Wörterbücher manipulieren, durchsuchen oder abbilden.  
 
 ## <a name="json-structure"></a>Wörterbuchstruktur 
 
-Im Folgenden wird die Struktur der generierten Einträge beschrieben. Für eine etwas mehr detaillierte Beschreibung, s. die Dokumentationsdatei [*hilfe_worterbucher.md*](./docs/hilfe_worterbucher.md) (auf Deutsch) oder [*help_dictionaries.md*](./docs/help_dictionaries.md) (auf Englisch) im *docs* 
-Ordner.
+Im Folgenden wird die Struktur der generierten Einträge beschrieben. Für eine etwas mehr detaillierte Beschreibung, 
+s. die Dokumentationsdatei [*hilfe_worterbucher.md*](./docs/hilfe_worterbucher.md) (auf Deutsch) oder [*help_dictionaries.md*](./docs/help_dictionaries.md) (auf Englisch) im *docs* Ordner.
   
 ### <a name="json-GermanNounEntriesDict"></a>Grundstruktur eines `GermanNounEntriesDict` Wörterbuchs (enthält grammatikalische Informationen):
 
@@ -107,7 +117,26 @@ Ordner.
 }
 ```
 
-### <a name="json-GermanNounEntriesTranslationDict"></a>Grundstruktur eines `GermanNounEntriesTranslationDict` Wörterbuchs (enthält Übersetzungen):
+### <a name="json-GermanAdjEntriesDict"></a>Grundstruktur eines `GermanAdjEntriesDict` Wörterbuchs (enthält grammatikalische Informationen über Adjektive):
+
+```
+{
+ <adj_headword>: 
+	{'u<usage_#>': 
+		{'deg_of_comp':
+			{'positiv': [<form1>,],
+			 'komparativ': [<form1>,],
+			 'superlativ': [<form1>,],
+			},
+	 	 'spec_comp': ['no_am'|'no_other_forms',],
+		 'decl_feat': ['no_comp'|'no_decl'],
+		 'attr_pred': ['attr_only'|'pred_only'],
+		},
+	},
+}
+```
+
+### <a name="json-GermanNounTranslationDict"></a>Grundstruktur eines Übersetzungswörterbuchs (`GermanNounTranslationDict` und `GermanAdjTranslationDict`):
 
 ```
 {
@@ -123,11 +152,26 @@ Ordner.
 ```
 
 
+## <a name="remarks"></a>Hinweise zu den Wörterbuch-Inhalten
+
+* Substantive, die ein Leerzeichen enthalten (z.B. [Vereinigte Staaten](https://de.wiktionary.org/wiki/Vereinigte_Staaten)) und Wörter, die ein Zeichen lang sind (z.B. [A](https://de.wiktionary.org/wiki/A)) werden **nicht** in die generierten Wörterbücher eingetragen.
+
+* Schon ein flüchtiger Blick an die regulären Ausdrücke, die wir verwenden mussten, zeigt, dass das automatische Parsen von Wiktionary-Seiten nicht gerade einfach ist. Trotz aller Bemühungen der Redakteure des deutschen Wiktionary sind Fehler in so großen Projekten unvermeidbar. 
+Zum Glück gibt es relativ wenige schwerwiegende Fehler in den Seiten, die wir verarbeitet haben (zumindest in den Teilen woran wir uns interessierten).
+Grundsätzlich ignorierten wir Fehler, die Einträge in der 0,01% Größenordnung (d.h., weniger als cca. ein hundert Einträge) betreffen. Dies bedeutet, dass einige Einträge z.B. HTML-Tag-Fragmente (wie etwa "<br") enthalten können, die weniger aufmerkasame Beiträger in den Text aus Versehen 
+eingegeben haben.
+(Siehe, z.B., der Eintrag [*Charlie*](https://de.wiktionary.org/wiki/Charlie).)   Es gibt aber (nach unserem besten Wissen) lediglich eine kleine Menge solcher Einträge in den generierten Wörterbücher, und sie können, falls nötig, auch manuell korrigiert werden.
+
+* Eine weitere kleine Menge Fehler stammen aus den automatischen Skripten, die für eine kleine Minderheit der Einträge nicht geeignet sind.
+Zum Beispiel ist das Algorithmus für mehrwörtige deklinierte Forme der Substantive 
+(siehe [Beschreibeung des Merkmals `spec_pre` im Dokumentation](./docs/hilfe_worterbucher.md#specpre)) problematisch in ein Paar speziellen Fällen, 
+siehe z.B. das dialektale Wort [Teifi](https://de.wiktionary.org/wiki/Teifi). 
+
 ## <a name="installation"></a>Installation
 
-Um dewiktionaryparser zu installieren, navigieren Sie zum **[dist](./dist/)** Ordner dieses Pakets und geben Sie folgenden Befehl in Ihr Terminalfenster ein:
+Um dewiktionaryparser zu installieren, navigieren Sie zum **[dist](./dist/)** Ordner dieses Pakets und geben Sie folgenden Befehl in Ihr Terminalfenster ein (wo `TAR-GZ-DATEI` ist der Dateiname der .tar.gz Datei, z.B., `dewiktionaryparser-1.0.tar.gz`):
 
-`pip install dewiktionaryparser-1.0.tar.gz`
+`pip install TAR-GZ-DATEI`
 
 Bitte beachten Sie, dass eine Version von  [**Python 3**](https://www.python.org/downloads/) zuvor auf Ihrem Recnher installiert werden muss.  (Die Skripte wurden bisher auf Python 3.5 und 3.6 in einer Windows-Umgebung getestet.)
 
