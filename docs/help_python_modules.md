@@ -31,17 +31,21 @@ Note that you need to have a version of [**Python 3**](https://www.python.org/do
 
 ## <a name="modules"></a>The modules
 
-The package consists of four modules, all of which are initiated when the package is imported.
+The package consists of the following modules, all of which are initiated when the package is imported.
 
-1. `common_defs.py` is a collection of functions and variables (regexes, for the most part) that are used by most or all of the modules. 
+1. `common_defs.py` is a collection of functions and variables (regexes, for the most part) that are used by more than one of the modules. 
 The most general `WordEntriesDict` class is also defined here along with its basic methods for exporting to and importing from a .json file, 
 for making inverse dictionaries and for enhancing entry usages with information from another dictionary. Basic displaying methods (`tabulate_entry(<headword:str>)`, `word_entry(<headword:str>)`, `printsorted(from:int, to:int)`) are also defined.
 
-2. `de_wikt_noun_info_parser.py` includes the definition of the `GermanNounEntries` class along with its methods (and regexes) for extracting grammatical information from wiktionary xml files. The class-specific `make_inv_dict()` and `make_commons_dict` methods are also defined.
+2. `de_wikt_noun_info_parser.py` includes the definition of the `GermanNounEntries` class along with its methods (and regexes) for extracting grammatical information on nouns from wiktionary xml files. The class-specific `make_inv_dict()` and `make_commons_dict()` methods are also defined.
 
-3. `de_wikt_noun_translations.py` includes the definition of the `GermanNounTranslationDict` class along with its methods (and regexes) for extracting translation information from wiktionary xml files. The class-specific `make_inv_dict()` is likewise defined.
+3. `de_wikt_noun_translations.py` includes the definition of the `GermanNounTranslationDict` class along with its methods (and regexes) for extracting translation information on nouns from wiktionary xml files. The class-specific `make_inv_dict()` is likewise defined.
 
-4. `explore.py` contains functions useful in exploring the generated dictionaries.
+4. `de_wikt_adj_info_parser.py` includes the definition of the `GermanAdjEntries` class along with its methods (and regexes) for extracting grammatical information on adjectives from wiktionary xml files. The class-specific `make_inv_dict()` method is also defined.
+
+5. `de_wikt_adj_translations.py` includes the definition of the `GermanAdjTranslationDict` class along with its methods (and regexes) for extracting translation information from wiktionary xml files. The class-specific `make_inv_dict()` is likewise defined.
+
+6. `explore.py` contains functions useful in exploring the generated dictionaries.
 
 In what follows, the above functionalities are described in more detail.
 For some sample usages, see also the **[sample_script.py](../src/sample_script.py)** script in the src directory.
