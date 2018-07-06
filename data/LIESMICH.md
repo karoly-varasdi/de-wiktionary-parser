@@ -3,6 +3,9 @@
 Die folgende Tabelle liefert einen Überblick über die Wörterbücher in diesem Ordner.
 Die Wörterbücher wurden automatisch generiert aus dem [deutschen Wiktionary](https://de.wiktionary.org/wiki/Wiktionary:Hauptseite) mit den Skripten unter dem  **[src](../src/)** Ordner im Stammverzeichnis.
 
+Die aktuellen Wörterbücher im *data* Ordner wurden generiert aus der [1 Juli 2018 Version der deutschen Wiktionary](https://dumps.wikimedia.org/dewiktionary/20180701/dewiktionary-20180701-pages-meta-current.xml.bz2).
+
+
 | Dateiname | Wortart der Einträge| Art des Wörterbuchs | Beschreibung |
 | --- | --- | --- | --- |
 | de_noun_entries | Substantiv | grammatikalisch | Enthält grammatikalische und verwendungsbezogene Informationen über deutsche Substantive. |

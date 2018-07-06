@@ -4,6 +4,8 @@
 The following table provides an overview of the dictionaries in the present folder.
 The dictionaries have been auto-generated from the [German Wiktionary](https://de.wiktionary.org/wiki/Wiktionary:Hauptseite) using the scripts under the **[src](../src/)** directory of the root directly.
 
+The current dictionaries in the *data* folder were generated from [the 1 July 2018 Wiktionary dump](https://dumps.wikimedia.org/dewiktionary/20180701/dewiktionary-20180701-pages-meta-current.xml.bz2).
+
 | filename | entries POS | dictionary type | description |
 | --- | --- | --- | --- |
 | de_noun_entries | noun | grammatical | Contains grammatical and usage-relevant information about German nouns. |
