@@ -25,7 +25,7 @@ There are two resources that you can find here right now:
 1. the dictionary files (JSON) under the **[data](./data/)** directory;
 2. the Python scripts under the **[src](./src/)** directory that generate these dictionaries.
 
-If you only need the dictionaries as we generated them from the .xml source ([the 1 June 2018 dump from Wiktionary](https://dumps.wikimedia.org/dewiktionary/20180601/dewiktionary-20180601-pages-meta-current.xml.bz2)), *you do not need to install the present Python package*: just use the 
+If you only need the dictionaries as we generated them from the .xml source, *you do not need to install the present Python package*: just use the 
 dictionary you need from the **[data](./data/)** folder. (See [README](./data/README.md) under the **data** folder for a description of the dictionaries in it.) 
 
 However, if you want to generate your own versions, or want to extend the script, or experiment with it on your own, you will need to install it. 

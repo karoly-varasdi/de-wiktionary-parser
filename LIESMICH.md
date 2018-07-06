@@ -23,7 +23,7 @@ In diesem Paket befinden sich zwei Ressourcen:
 1. die Wörterbuch-Dateien (JSON) unter dem **[data](./data/)** Ordner;
 2. die Python-Skripte unter dem **[src](./src/)** Ordner, mit denen diese Wörterbücher generiert wurden.
 
-Falls Sie nur die Wörterbücher brauchen, die wir vom Wiktionary .xml ([Version 1 June 2018](https://dumps.wikimedia.org/dewiktionary/20180601/dewiktionary-20180601-pages-meta-current.xml.bz2)) generiert haben, *dann brauchen Sie das Python-Paket nicht zu installieren*: 
+Falls Sie nur die Wörterbücher brauchen, die wir vom Wiktionary .xml generiert haben, *dann brauchen Sie das Python-Paket nicht zu installieren*: 
 nehmen Sie einfach das Wörterbuch aus dem **[data](./data/)** Ordner, das Sie brauchen. (Siehe [LIESMICH](./data/LIESMICH.md) im **data** Ordner für eine Beschreibung der Wörterbücher im Ordner.) 
 
 Nur falls Sie selbst die Wörterbücher generieren möchten, oder mit dem Skript experimentieren möchten, müssen Sie das Python-Paket [installieren](#installation).
