@@ -135,7 +135,7 @@ class GermanNounTranslationDict(WordEntriesDict):
                     lexeme_translations = []
                     transl_en_match = re.findall(transl_en_regex, bylex[1])
                     for match in transl_en_match:
-                        lexeme_translations.append(match[3])
+                        lexeme_translations.append(match[3].strip())
 
                     # adding lexeme_specification + translations to the dictionary:
                     if lexeme_translations:
@@ -191,7 +191,7 @@ class GermanNounTranslationDict(WordEntriesDict):
                             pre_translation_stuff = re.sub(r'^\(auch\:\s*', '', pre_translation_stuff)
                             translation_stuff = match[3]
                             if pre_translation_stuff:
-                                translation_stuff = pre_translation_stuff + translation_stuff
+                                translation_stuff = (pre_translation_stuff + translation_stuff).strip()
                             lexeme_translations.append(translation_stuff)
 
                     # adding lexeme_specification + translations to the dictionary:

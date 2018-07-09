@@ -1,24 +1,259 @@
-# German dictionary resources from Wiktionary
+# German Wiktionary xml Parser
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+A python library for parsing a [German wiktionary xml file](https://dumps.wikimedia.org/dewiktionary), with an option to export the results to .json format.
+
+The current version implements the extraction of select information about German nouns (such as gender, declension, special word type information) and adjectives (forms and information on degrees of comparison), as well as extracting English translations of German nouns and 
+abbreviations, and of German adjectives.
+
+## Contents
+
+* [The resources](#resources)
+* [Dictionary types](#dictionary-types)
+* [Dictionary structure](#dictionary-structure)
+	* [The basic structure of a `GermanNounEntriesDict` dictionary](#dictionary-GermanNounEntriesDict)
+	* [The basic structure of a `GermanAdjEntriesDict` dictionary](#dictionary-GermanAdjEntriesDict)
+	* [The basic structure of a translation dictionary (`GermanNounTranslationDict` and `GermanAdjTranslationDict`)](#dictionary-German-TranslationDict)
+* [Some remarks on the entries](#remarks)
+* [Installation](#installation)
+* [A sample script to start with](#sample)
+* [Authors and license](#authors-and-license)
 
 
-The following table provides an overview of the dictionaries in the present folder.
-The dictionaries have been auto-generated from the [German Wiktionary](https://de.wiktionary.org/wiki/Wiktionary:Hauptseite) using the scripts under the **[src](../src/)** directory of the root directly.
+## <a name="resources"></a>The resources
+There are two resources that you can find here right now: 
+1. the dictionary files (JSON) under the **[data](./data/)** directory;
+2. the Python scripts under the **[src](./src/)** directory that generate these dictionaries.
 
-The current dictionaries in the *data* folder were generated from [the 1 July 2018 Wiktionary dump](https://dumps.wikimedia.org/dewiktionary/20180701/dewiktionary-20180701-pages-meta-current.xml.bz2).
+If you only need the dictionaries as we generated them from the .xml source, *you do not need to install the present Python package*: just use the 
+dictionary you need from the **[data](./data/)** folder. (See [README](./data/README.md) under the **data** folder for a description of the dictionaries in it.) 
 
-| filename | entries POS | dictionary type | description |
-| --- | --- | --- | --- |
-| de_noun_entries | noun | grammatical | Contains grammatical and usage-relevant information about German nouns. |
-| de_noun_entries_inv | noun | inverse dict | The inverse dictionary to de_noun_entries; assigns base forms to inflected forms. |
-| de_noun_translations | noun | translations | Contains English translations of German nouns and abbreviations. |
-| de_noun_translations_inv | noun | inverse dict | The inverse dictionary to de_noun_translations; assigns the German words to the English translations. |
-| de_noun_entries_with_translations | noun | grammatical + translation | Combines the information in de_noun_entries and de_noun_translations. |
-| de_noun_entries_commons | noun | grammatical | A subdictionary of de_noun_entries containing common nouns only.
-| de_noun_entries_commons_inv | noun | inverse dict | The inverse dictionary to de_noun_entries_commons; assigns base forms to inflected forms. |
-| de_adj_entries | adj | grammatical | Contains grammatical information about German adjectives. |
-| de_adj_entries_inv | adj | inverse dict | The inverse dictionary to de_adj_entries; assigns base forms to inflected forms. |
-| de_adj_translations | adj | translations | Contains English translations of German adjectives. |
-| de_adj_translations_inv | adj | inverse dict | The inverse dictionary to de_adj_translations; assigns the German words to the English translations. |
-| de_adj_entries_with_translations | adj | grammatical + translation | Combines the information in de_adj_entries and de_adj_translations. |
+However, if you want to generate your own versions, or want to extend the script, or experiment with it on your own, you will need to install it. 
+We have packed everything you need into a .tar.gz file named, which you should be able to easily and automatically install on 
+any computer with Python 3 installed (see the [section on installation](#installation)).
 
-For the structure of the dictionary entries, see the [README.md under the root directory](../README.md).
+For a detailed documentation, please refer to the following files in the *[docs](./docs/)* folder:
+1. [The **help_dictionaries.md** documentation file](./docs/help_dictionaries.md) describes the dictionaries and their features.
+2. [The **help_python_modules.md** documentation file](./docs/help_python_modules.md) describes the use of the Python modules.
+
+## <a name="dictionary-types"></a>Dictionary types 
+We have defined dictionary subclasses, corresponding to different, though related dictionary types:
+1. Noun-related dictionaries: 
+    1. `GermanNounEntriesDict`: the instances of this class are dictionaries the entries of which contain grammatical (in particular, usage-related and morphological) information about the German nouns in the German wiktionary
+    2. `GermanNounTranslationDict`: the instances of this class are dictionaries the entries of which contain (for the time being, only English) translations of the entries of a `GermanNounEntriesDict` (if such translations exist in the German wiktionary)
+    
+2. Adjective-related dictionaries:
+    1. `GermanAdjEntriesDict`: the instances of this class are dictionaries the entries of which contain grammatical (primarily degree of comparison) information about the German adjectives in the German wiktionary
+    2. `GermanAdjTranslationDict`: the instances of this class are dictionaries the entries of which contain (for the time being, only English) translations of the entries of a `GermanAdjEntriesDict` (if such translations exist in the German wiktionary)
+    
+3. `WordEntriesDict`: the superclass of the classes above
+
+The dictionaries are generated by a parser script that parses the German Wiktionary xml pages into two kinds of dictionary: a *grammatical* or a *translation* dictionary. 
+The result of the parsing phase can then be exported (saved) in the popular JSON format. 
+Beside generating and storing the dictionaries, there are methods and functions that manipulate, search, or display these dictionaries.
+(For details ) 
+
+## <a name="dictionary-structure"></a>Dictionary structure
+     
+This section offers a quick overview of the structure of the main dictionary types. For a more detailed description of the dictionaries and the features employed, please refer to [the *help_dictionaries.md* documentation file on 
+dictionaries](./docs/help_dictionaries.md) in the *docs* folder.
+
+### <a name="dictionary-GermanNounEntriesDict"></a>The basic structure of a `GermanNounEntriesDict` dictionary
+```
+{
+ <noun_headword>: 
+	{'u<usage_#>': 
+		{'gen_case_num':
+			{'genus': 
+				{'sg<decl_#>': ['m'|'f'|'n',]},
+			'akkusativ': 
+				{'plural': 
+					{'pl<decl_#>': [<pluralform1>,]},
+				'singular': 
+					{'sg<decl_#>': [<sgform1>,]}},
+			'dativ':
+				{'plural': 
+					{'pl<decl_#>': [<pluralform1>,]},
+				'singular': 
+					{'sg<decl_#>': [<sgform1>,]}},
+			'genitiv': 
+				{'plural': 
+					{'pl<decl_#>': [<pluralform1>,]},
+				'singular': 
+					{'sg<decl_#>': [<sgform1>,]}},
+			'nominativ': 
+				{'plural': 
+					{'pl<decl_#>': [<pluralform1>,]},
+				'singular': 
+					{'sg<decl_#>': [<sgform1>,]}}
+			},
+		{'spec_pre':
+			{'genus_pre': 
+				{'sg<decl_#>': ['m'|'f'|'n',]},
+			'akkusativ_pre': 
+				{'plural_pre': 
+					{'pl<decl_#>': [<pluralform1>,]},
+				'singular_pre': 
+					{'sg<decl_#>': [<sgform1>,]}},
+			'dativ_pre':
+				{'plural_pre': 
+					{'pl<decl_#>': [<pluralform1>,]},
+				'singular_pre': 
+					{'sg<decl_#>': [<sgform1>,]}},
+			'genitiv_pre': 
+				{'plural_pre': 
+					{'pl<decl_#>': [<pluralform1>,]},
+				'singular_pre': 
+					{'sg<decl_#>': [<sgform1>,]}},
+			'nominativ_pre': 
+				{'plural_pre': 
+					{'pl<decl_#>': [<pluralform1>,]},
+				'singular_pre': 
+					{'sg<decl_#>': [<sgform1>,]}}
+			},
+		'decl_type': ['adj'|'-sch'],
+		'tantum': ['Sg'|'Pl'],
+		'spec_word_type': ['Abkürzung'|'Toponym'|'Eigenname'|'Nachname'|'Vorname'|'Name'|'Straßenname'],
+		},
+	},
+}
+```
+
+
+### <a name="dictionary-GermanAdjEntriesDict"></a>The basic structure of a `GermanAdjEntriesDict` dictionary
+
+```
+{
+ <adj_headword>: 
+	{'u<usage_#>': 
+		{'deg_of_comp':
+			{'positiv': [<form1>,],
+			 'komparativ': [<form1>,],
+			 'superlativ': [<form1>,],
+			},
+	 	 'spec_comp': ['no_am'|'no_other_forms',],
+		 'decl_feat': ['no_comp'|'no_decl'],
+		 'attr_pred': ['attr_only'|'pred_only'],
+		},
+	},
+}
+```
+
+### <a name="dictionary-German-TranslationDict"></a>The basic structure of a translation dictionary (`GermanNounTranslationDict` and `GermanAdjTranslationDict`)
+
+```
+{
+ <headword>: 
+	{'u<usage_#>': 
+		{'translations':
+			{'en': 
+				{'m<lexeme_#>': [<EN-translation1>,]},
+			},
+		},
+	},
+}
+```
+
+
+
+## <a name="remarks"></a>Some remarks on the entries
+
+* Even a cursory look at the regular expressions that we had to use shows that Wiktionary pages are not exactly easy to parse by a machine. Despite all the efforts of the editors of the German Wiktionary, in projects as big as this, errors are simply unavoidable. Fortunately, there are relatively 
+few serious errors in the pages we have processed (at least in those parts of them that we were interested in). Our general policy was to ignore an error if it affects entries of the 0.01% magnitude relative to the size of the dictionary (i.e., less than a hundred entries). This means that a 
+couple of entries might contain free-floating html tag fragments (like `<br`) entered by a less attentive human editor, etc. (See, e.g., the entry for [*Charlie*](https://de.wiktionary.org/wiki/Charlie).) 
+But (to our best knowledge) there are only a handful of such items in the generated dictionaries and they can easily be corrected by hand if necessary.   
+
+* A further small number of errors in the generated dictionary result from the automated scripts not being suitable for a fraction of the entries due to the entry's special nature. 
+For example, while the algorithm for entering the last word in inflected noun forms under the relevant (e.g., genitive
+singular) `gen_case_num` slot and the preceding string under the relevant `spec_pre` slot 
+(see [description of `spec_pre` feature in the documentation on dictionaries](./docs/help_dictionaries.md#specpre)) works well for the vast majority of the cases, 
+it fails in the case of one or two special words like the dialectal [*Teifi*](https://de.wiktionary.org/wiki/Teifi). 
+
+* Finally, note that the handful of 1-character-long words (e.g., [A](https://de.wiktionary.org/wiki/A)) and, 
+in the case of noun-related dictionaries, head words containing spaces (e.g., [Vereinigte Staaten](https://de.wiktionary.org/wiki/Vereinigte_Staaten)) are not included in the generated dictionaries. 
+(The properties of multi-word nouns normally depend on their final noun anyway.)
+
+## <a name="installation"></a>Installation and usage
+
+To install dewiktionaryparser, navigate to the **[dist](./dist/)** directory of this package and pip install the latest tar.gz distribution. 
+You can do this by running the following command in your terminal (where `TAR-GZ-FILE` stands for the filename of the tar.gz file, e.g.,  `dewiktionaryparser-1.0.tar.gz`):
+
+`pip install TAR-GZ-FILE`
+
+Note that you need to have a version of [**Python 3**](https://www.python.org/downloads/) installed on your computer.  (The scripts have been tested on Python 3.5 and 3.6 in a Windows environment.)
+
+For a detailed description of the Python modules in this package and their use, please refer to [the *help_python_modules.md* documentation file](
+./docs/help_python_modules.md) in the *docs* folder.
+
+## <a name="sample"></a>A sample script to start with
+The following simple script generates and stores a grammatical and a translation dictionary for German nouns, as well as enhances the former with information from the latter.
+
+```python
+# import the noun parser module functions:
+import dewiktionaryparser as dw
+
+##################################################################
+# Generate dictionary with grammatical information from xml file #
+##################################################################
+
+# initialize a dictionary for grammatical information:
+word_entries = dw.GermanNounEntriesDict()
+
+# generate entries from dewiktionary-20180601-pages-meta-current.xml located in the data folder under current working directory:
+word_entries.generate_entries('.\data\dewiktionary-20180601-pages-meta-current.xml')
+
+# save the resulting dictionary under the data folder of the current working dictionary:
+word_entries.export_to_json('.\data\de_noun_entries.json')
+
+
+##################################################################
+# Generate dictionary with translation information from xml file #
+##################################################################
+
+# initialize a dictionary for translation information:
+translations = dw.GermanNounTranslationDict()
+
+# generate entries from dewiktionary-20180601-pages-meta-current.xml located in the data folder under current working directory:
+translations.generate_translations('.\data\dewiktionary-20180601-pages-meta-current.xml')
+
+# save the resulting information dictionary under the data folder of the current working dictionary:
+translations.export_to_json('.\data\de_noun_translations.json')
+
+
+##################################################################
+# Enhancing grammatical dictionary with translation information  #
+##################################################################
+
+word_entries.enhance_usages(translations)
+
+# save the resulting dictionary under the data folder of the current working dictionary:
+word_entries.export_to_json('.\data\de_noun_entries_with_translations.json')
+```
+
+See also the **[sample_script.py](./src/sample_script.py)** script in the src directory.
+
+## <a name="authors-and-license"></a>Authors and license
+
+### The program
+Copyright (C) 2018 Zsófia Gyarmathy and Károly Varasdi
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+### The language data from Wiktionary
+
+The language data from Wiktionary (<https://de.wiktionary.org/>) is dual-licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported License (CC-BY-SA) and the GNU Free Documentation License (GFDL).
+
+ * For the full text of CC BY-SA, see [LICENSE-CC-BY-SA](./data/LICENSE-CC-BY-SA) under the data folder or visit <https://en.wiktionary.org/wiki/Wiktionary:Text_of_Creative_Commons_Attribution-ShareAlike_3.0_Unported_License>
+ * For the full text of GFDL, see [LICENSE-GFDL](./data/LICENSE-GFDL) under the data folder or visit <https://en.wiktionary.org/wiki/Wiktionary:Text_of_the_GNU_Free_Documentation_License>
+ 

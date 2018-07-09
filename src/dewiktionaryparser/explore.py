@@ -3,6 +3,7 @@
 
 from .common_defs import *
 import webbrowser
+import ujson
 
 
 def bigcap(sets_list:list) -> set:
@@ -33,10 +34,30 @@ def leaves_by_key(worddic:dict, key:str) -> list:
     return sorted({leaf for leaves in twigs_list_by_key(worddic, key) for leaf in leaves})
 
 
-def leaves_by_path_fragment(dic:dict, key_list:list) -> list:
+def leaves_by_path_fragment(dic:dict, key_list:list, per_usage=False) -> list:
     '''Accepts a dictionary and an arbitrary list of keywords (not necessarily existing in the dictionary). Returns the set of all the leaves in the dictionary that are under all the keys in the keylist (the empty set if a non-existent key has been used). For example, leaves_by_path_fragment(word_entries['Tee'], ['u2', 'akkusativ']) returns the akkusativ forms under usage 2 of the word Tee; and leaves_by_path_fragment(word_entries, ['nominativ', 'plural']) returns every nominativ plural form in word_entries.'''
     twigs_list = [br[-1] for w in dic for br in branches(dic[w]) if all(k in br for k in key_list)]
-    return sorted(set(e for li in twigs_list for e in li))
+    if per_usage:
+        return twigs_list
+    else:
+        return sorted(set(e for li in twigs_list for e in li))
+
+
+def forms(word:str, feats:str, dic:dict, per_usage = False) -> list:
+    '''Returns a list of leaves (separated by usage if per_usage = True). For example, forms('Hahn', 'singular genitiv', commons) returns all the inflected singular genitive forms of the word Hahn in the dictionary named commons.'''
+    return leaves_by_path_fragment(dic[word], feats.split(), per_usage)
+
+
+def genders(word:str, dic:dict, per_usage = False) -> list:
+    return forms(word, 'genus' ,dic, per_usage)
+
+
+def english_trs(word:str, dic:dict, per_usage = False) -> list:
+    return forms(word, 'translations en', dic, per_usage)
+
+
+def no_of_usages(word:str, dic:dict) -> int:
+    return len(dic[word])
 
 
 def headwords_by_key_value_pairs(worddic:dict, *key_value:tuple, by_usage=True) -> list:
@@ -69,7 +90,7 @@ def filter_entry_usages_by_keylists(source_dict: WordEntriesDict, include_list:l
         target_dict[k] = WordEntriesDict()
         for u in source_dict[k]:
             if all(twigs_list_by_key(source_dict[k][u], incl) for incl in include_list) and not any(twigs_list_by_key(source_dict[k][u], excl) for excl in exclude_list):
-                target_dict[k][u] = source_dict[k][u]
+                target_dict[k][u] = ujson.loads(ujson.dumps(source_dict[k][u]))
             else:
                 continue
         if target_dict[k]:
@@ -77,6 +98,18 @@ def filter_entry_usages_by_keylists(source_dict: WordEntriesDict, include_list:l
         else:
             del target_dict[k]
     return target_dict
+
+
+def subdic_by_headwords(dic:WordEntriesDict, headwords:list) -> WordEntriesDict:
+    '''Given a list of headwords from dic, it returns the corresponding subdictionary of dic.'''
+    subdic = WordEntriesDict()
+    for hw in headwords:
+        try:
+            subdic[hw] = ujson.loads(ujson.dumps(dic[hw]))
+        except KeyError:
+            continue
+    return subdic
+
 
 
 def wiki(word:str):
@@ -88,7 +121,7 @@ def wiki(word:str):
         webbrowser.open('https://de.wiktionary.org/wiki/' + word)
 
 
-from copy import deepcopy
+
 def charting_dictionary_space(dic:dict):
     entries = list(iter(dic.values()))
     chart = {}
@@ -98,7 +131,7 @@ def charting_dictionary_space(dic:dict):
     return chart
 
 def gen_the_rest(dic, chart):
-    old_chart = deepcopy(chart)
+    old_chart = ujson.loads(ujson.dumps(chart))
     for br in branches(chart):
         telescope = {}
         for new_key in sorted(keyrange(dic, br[:-1])):

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from .common_defs import *
-import ujson
 
 
 class GermanAdjEntriesDict(WordEntriesDict):
@@ -37,7 +36,7 @@ class GermanAdjEntriesDict(WordEntriesDict):
                     elif 'keine_weiteren_formen' in morphs_list and (tupl[1] == 'ja' or tupl[1] == '1'):
                         value_to_add = ['no_other_forms']
                     else:
-                        value_to_add = [tupl[1]]
+                        value_to_add = [tupl[1].strip()]
                 except IndexError:
                     continue
 

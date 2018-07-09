@@ -60,12 +60,12 @@ class GermanNounEntriesDict(WordEntriesDict):
                 three_list_2_list_of_words = three_list[2].strip().split()
                 try:
                     if 'genus' in morphs_list and '+' in three_list_2_list_of_words[-1]:
-                        value_to_add = re.split(r" *\+ *", three_list_2_list_of_words[-1])
+                        value_to_add = re.split(r" *\+ *", three_list_2_list_of_words[-1].strip())
                     else:
-                        value_to_add = [three_list_2_list_of_words[-1]]
+                        value_to_add = [three_list_2_list_of_words[-1].strip()]
                     value_prefix = None
                     if len(three_list_2_list_of_words) > 1:
-                        value_prefix = ' '.join(three_list_2_list_of_words[:-1])
+                        value_prefix = ' '.join(three_list_2_list_of_words[:-1]).strip()
                 except IndexError:
                     continue
 

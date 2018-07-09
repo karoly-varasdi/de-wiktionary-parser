@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name='dewiktionaryparser',
-      version='1.1',
+      version='1.1.1',
       description='A Python library for parsing data from the German wiktionary',
       long_description=readme(),
       author='Zsofia Gyarmathy and Karoly Varasdi',

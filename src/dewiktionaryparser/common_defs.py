@@ -251,18 +251,18 @@ diskussion_colon = r" Diskussion:"
 
 ''' strings to remove from xml to clean it before parsing: '''
 
-html_comment_string = r"(<|&lt;)!--(.(?!--(>|&gt;)))+.--(>|&gt;)"
-wiki_comment_string = r"<comment(.(?!</comment>))+.</comment>"
-nowiki_string =  r"(<|&lt;)nowiki(>|&gt;)(.(?!(<|&lt;)nowiki(>|&gt;)))+.(<|&lt;)nowiki(>|&gt;)"
-html_tag_string =  r"(<|\&lt;)(small|sup|ref)(.(?!\1/\2))*.?\1\/\2(>|\&gt;)" # \2 is the second group, e.g., small, sup, ref
-html_tag_string_onetag =  r"(<|\&lt;)(small|sup|ref)(.(?!(>|\&gt;)))*.?(>|\&gt;)" # e.g., "{{Ü|en|observation}}<ref name="law_d" />,"
-unicode_char_to_del = u'(\u00AE|\u200e)'
+html_comment_string = re.compile(r"(<|&lt;)!--(.(?!--(>|&gt;)))*.?--(>|&gt;)")
+wiki_comment_string = re.compile(r"<comment(.(?!</comment>))*.?</comment>")
+nowiki_string =  re.compile(r"(<|&lt;)nowiki(>|&gt;)(.(?!(<|&lt;)nowiki(>|&gt;)))*.?(<|&lt;)nowiki(>|&gt;)")
+html_tag_string =  re.compile(r"(<|\&lt;)(small|sup|ref)(.(?!\1/\2))*.?\1\/\2(>|\&gt;)") # \2 is the second group, e.g., small, sup, ref
+html_tag_string_onetag =  re.compile(r"(<|\&lt;)(small|sup|ref)(.(?!(>|\&gt;)))*.?(>|\&gt;)") # e.g., "{{Ü|en|observation}}<ref name="law_d" />,"
+unicode_char_to_del = re.compile(u'[\u00AE\u200e]')
 
 '''could also be included in to_del_strings:'''
 
-html_break = r"(<|\&lt;)br\s*/*(>|\&gt;)"
-angle_quoted_string = r"\(?\u00bb[^\u00ab]+\u00ab\)?"  # stuff between angle quotation marks usually comments, but these are not deleted for now.
-quoted_string = r"\(?„[^“]+“\)?"
+html_break = re.compile(r"(<|\&lt;)br\s*/*(>|\&gt;)")
+angle_quoted_string = re.compile(r"\(?\u00bb[^\u00ab]+\u00ab\)?")  # stuff between angle quotation marks usually comments, but these are not deleted for now.
+quoted_string = re.compile(r"\(?„[^“]+“\)?")
 
 
 '''list of all strings to delete:'''
@@ -271,10 +271,10 @@ to_del_strings = [html_comment_string, wiki_comment_string, nowiki_string, html_
 
 
 '''strings to replace:'''
-wiki_link_string = r'\[\[([^\|\]]+\|)?([^\]]+)\]\]'  ## delete all hyperlink indicators: string = re.sub(wiki_link_string, r'\2', string)
-specstring = r"\&(amp)?;nbsp;" # e.g., "nothing&nbsp;of&nbsp;", replace as space: string = re.sub(specstring, ' ', string)
-quote_html = r'&quot;'  # replace as ": string = re.sub(quote_html, '"', string)
-amp_html = r'&amp;'  # replace as ": string = re.sub(amp_html, '&', string)
+wiki_link_string = re.compile(r'\[\[([^\|\]]+\|)?([^\]]+)\]\]')  ## delete all hyperlink indicators: string = re.sub(wiki_link_string, r'\2', string)
+specstring = re.compile("\&(amp)?;nbsp;") # e.g., "nothing&nbsp;of&nbsp;", replace as space: string = re.sub(specstring, ' ', string)
+quote_html = re.compile(r'&quot;')  # replace as ": string = re.sub(quote_html, '"', string)
+amp_html = re.compile(r'&amp;')  # replace as ": string = re.sub(amp_html, '&', string)
 
 def clean_up_string(string:str):
     string = re.sub(wiki_link_string, r'\2', string)
@@ -318,10 +318,10 @@ de_adj_regex = re.compile(r"([^=]|^|\n)=== \{\{Wortart\|Adjektiv\|Deutsch\}\}")
 
 ''' Translations-specific delete list  '''
 
-empty_entrans_tag = r"\{\{Ü\|en\}\}"  # e.g., in 'Windschutzscheibenwaschanlage'
-wiki_tag_string = r"\(?\{\{[^Ü][^\}]*\}\}\)?"  # delete all non-translation tags, e.g., {{amer.}}
-wiki_italics_string = r"\(?''[^']+''\)?\s*"
-to_del_char_from_ubersetzung_tag = r"(\{\{Ü\|en\|[^\}]*),([^\}]*\}\})"  # to remove comma replace with \1\2 (e.g., "{{Ü|en|atomic absorption spectrometry, en|atomic absorption spectroscopy}}")
+empty_entrans_tag = re.compile("\{\{Ü\|en\}\}")  # e.g., in 'Windschutzscheibenwaschanlage'
+wiki_tag_string = re.compile(r"\(?\{\{[^Ü][^\}]*\}\}\)?")  # delete all non-translation tags, e.g., {{amer.}}
+wiki_italics_string = re.compile("\(?''[^']+''\)?\s*")
+to_del_char_from_ubersetzung_tag = re.compile(r"(\{\{Ü\|en\|[^\}]*),([^\}]*\}\})")  # to remove comma replace with \1\2 (e.g., "{{Ü|en|atomic absorption spectrometry, en|atomic absorption spectroscopy}}")
 to_del_strings_transl = [wiki_italics_string, wiki_tag_string, empty_entrans_tag, angle_quoted_string, quoted_string] # note: order might matter (e.g, wiki_italics string before wiki_tag_string)
 
 
